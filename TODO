@@ -1,0 +1,10 @@
+[x] creating a working script that connects to arduino using cutecom
+[ ] sampling one channel
+    [x] understanding hot to connect cables
+    [ ] understanding how to analogread from avr
+    [ ] ADC is the bunch of registers which are involved in analog digital convertertion
+    [ ] understanding how to adc from all channels
+    [ ] once convertion is completed I have to enable an ISR which send data through serial (VIA INTERRUPT!)
+    [ ] once data arrived I need to plot them!
+    [ ] I need to figure out how to plot one channel
+[ ] avoid using cutecom
