@@ -11,6 +11,9 @@
 #include <iostream>
 #include <string> 
 
+#define BAUDRATE 19200
+#define READ 1
+
 using namespace std;
 
 int serial_set_interface_attribs(int fd, int speed, int parity) {
@@ -81,39 +84,31 @@ int serial_open(const char* name) {
   return fd;
 }
 
-/*
-  serial_linux <serial_file> <baudrate> <read=1, write=0>
-*/
-int main(int argc, const char** argv) {
-  if (argc<4) {
-    printf("serial_linux <serial_file> <baudrate> <read=1, write=0>\n");
-  }
+int main(int argc, const char** argv) { 
   const char* serial_device="/dev/ttyACM0";
-  int baudrate=19200;
-  int read_or_write=1;
-
-  FILE* file = fopen("datafile", "w");
-
-  if (file == NULL) {
-        perror("Error while opening file!");
-        return 1;
-  }
-
-
+  int baudrate=BAUDRATE;
+  int read_or_write=READ;
 
   int fd=serial_open(serial_device);
   serial_set_interface_attribs(fd, baudrate, 0);
   serial_set_blocking(fd, 1);
 
+  FILE *file = fopen("datafile.dat", "w");
+  if(file == NULL){
+    perror("Error while trying to open datafile.dat");
+    exit(EXIT_FAILURE);
+  }
+  int nchars;
+  char buf[1024];
+  
   printf("in place\n");
   while(1) {
-    char buf[1024];
     memset(buf, 0, 1024);
     if (read_or_write) {
-      int nchars=read(fd, buf,1024);
+      nchars=read(fd, buf,1024);
       printf("%s", buf);
-      fputs(buf, file);
-      fflush(file);
+      fgets(buf, strlen(buf), stdin);
+      memset(buf, 0, 1024);
     } else {
       cin.getline(buf, 1024);
       int l=strlen(buf);
