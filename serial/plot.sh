@@ -1,4 +1,39 @@
 (
-  echo "plot [0:100] [0:1050] '< tail -n100 datafile' with lines";
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile1' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile2' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile3' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile4' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile5' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile6' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile7' with lines";
+  while :; do sleep .4; echo replot; done
+) | gnuplot -persist
+
+(
+  echo "plot [0:100] [0:1050] '< tail -n100 datafile8' with lines";
   while :; do sleep .4; echo replot; done
 ) | gnuplot -persist

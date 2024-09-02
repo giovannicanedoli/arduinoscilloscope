@@ -7,8 +7,8 @@ BINS=serial
 
 all: $(BINS)
 
-serial:   serial.cpp
-		$(CXX) -$(CCOPTS) -o $@ $^  
+serial:   serial.c serial_test.c
+		$(CC) -o $@ $^  
 
 clean:
 		rm -rf *~ $(BINS) *.pgm

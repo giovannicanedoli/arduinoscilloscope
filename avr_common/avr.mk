@@ -1,4 +1,4 @@
-INCLUDE_DIRS=-I. -I../avr_common
+INCLUDE_DIRS=-I. -I./avr_common
 CXX=avr-g++
 CC=avr-gcc
 AS=avr-gcc
@@ -37,7 +37,7 @@ AS_OPTS=-x assembler-with-cpp $(CC_OPTS)
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET):i
 AVRDUDE_FLAGS += -P $(AVRDUDE_PORT) -b $(AVRDUDE_BAUDRATE)
-AVRDUDE_FLAGS += -D -q -V -C /usr/share/arduino/hardware/tools/avr/../avrdude.conf
+AVRDUDE_FLAGS += -D -q -V
 AVRDUDE_FLAGS += -c $(AVRDUDE_BOOTLOADER)
 
 
@@ -58,7 +58,7 @@ all:	$(BINS)
 
 %.hex:	%.elf
 	avr-objcopy -O ihex -R .eeprom $< $@
-	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:$@:i #$(AVRDUDE_WRITE_EEPROM) 
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:w:$@:i
 
 clean:	
 	rm -rf $(OBJS) $(BINS) *.hex *~ *.o
