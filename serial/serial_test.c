@@ -31,7 +31,7 @@ int main(int argc, const char** argv) {
     Data data = {0};
     data.channels = 4;
     data.frequency = 12345;   
-    data.mode = 1;    
+    data.mode = 2;    
 
 
 
@@ -103,15 +103,16 @@ int main(int argc, const char** argv) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
             printf("%s", buf);
-
+            
             if(data.mode == 1){
+                //to avoid writing "RICEVUTO on files"
                 if(strncmp(buf, "RICEVUTO!",9)!= 0){
                     fputs(buf, file1);
                     fflush(file1);
                 }
             }
 
-            usleep(2000000);
+            usleep(1000000);
         } else {
             usleep(1000000);
             serial_send(&data, serial_fd);

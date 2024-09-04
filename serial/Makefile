@@ -11,4 +11,4 @@ serial:   serial.c serial_test.c
 		$(CC) -o $@ $^  
 
 clean:
-		rm -rf *~ $(BINS) *.pgm
+		rm -rf *~ $(BINS) *.pgm datafile*

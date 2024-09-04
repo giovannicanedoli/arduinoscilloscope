@@ -5,9 +5,16 @@
 [x] avoid using cutecom
 [x] once convertion is completed I have to enable an ISR which send data through serial (VIA INTERRUPT!)
 [x] once data arrived I need to plot them!
-[ ] understanding how to adc from all channels
+[x] understanding how to adc from all channels
 [ ] fix makefiles
-[ ] fix headers
+[x] fix headers
 [ ] testing!
 [ ] .sh files to automatize all?
-[ ] serial .c?
+[x] serial .c?
+[ ] add sigaction to handle ctrl c
+[ ] add io control
+[ ] aggiungere una richiesta su quante iterazioni campionare nel buffered mode (esempio: numero > 5)
+[ ] aggiungere un campionamento della frequenza
+[ ] aggiungere i controlli su plot.sh (se i file non esistono/plot.sh viene avviato prima del campionamento)
+[ ] aggiungere un clock per evitare il potenziometro
+[ ] script che, a seconda del canale, mi scrive sul determinato file

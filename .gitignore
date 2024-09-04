@@ -2,4 +2,4 @@
 *.elf
 *.hex
 .vscode
-datafile
+datafile*
