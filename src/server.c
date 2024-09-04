@@ -16,6 +16,8 @@ volatile uint16_t adc_value[MAX_CHANNELS];  // Here I have all the converted val
 volatile Rcv_Struct rcv_data = {0};
 volatile uint8_t trigger=0;
 volatile uint8_t sent = 0;
+volatile uint8_t current_channel = 0;
+
 
 
 void select_adc_channel(uint8_t channel) {
@@ -32,25 +34,28 @@ void adc_init(void) {
     ADMUX = (1 << REFS0);  // Use AVCC as the voltage reference
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);  // Enable ADC and set prescaler to 128
     ADCSRA |= (1 << ADIE);  // enables ADC interrupt
-    select_adc_channel(0); 
-    ADCSRA |= (1 << ADSC);  // Starts ADC conversion!
+    select_adc_channel(current_channel);  
 }
 
 void setup_timer1() {
     TCCR1A = 0;
     TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
-    OCR1A = 15624;  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second
+    OCR1A = 15624*2;  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second
     TIMSK1 = (1 << OCIE1A);  // Enable Timer1 compare match interrupt
 }
 
 ISR(TIMER1_COMPA_vect) {
-    select_adc_channel(rcv_data.channels);  // Select the current channel
+    select_adc_channel(current_channel);  // Select the current channel
     ADCSRA |= (1 << ADSC);  // Start a new conversion
 }
 
 ISR(ADC_vect) {
-    adc_value[rcv_data.channels] = ADC;
-    ADCSRA |= (1 << ADSC);  // starts a new convertion!
+    adc_value[current_channel] = ADC;
+    if(current_channel >= rcv_data.channels){
+        current_channel = 0;
+    }else{
+        current_channel++;
+    }
 }
 
 ISR(INT0_vect) {
@@ -101,7 +106,7 @@ int main(void){
                     UART_putString((uint8_t *)data_buffer); 
                     UART_putString((uint8_t *)"\n");
                     memset(data_buffer, 0, sizeof(data_buffer));
-                    _delay_ms(100);
+                    // _delay_ms(2000);
                     
                 }
                 
@@ -128,6 +133,8 @@ int main(void){
                         current_data_written = snprintf((char*)data_buffer + written, remaining, "%d %d\n", j, adc_value[j]);
                         written += current_data_written;
                         remaining -= current_data_written;
+                        _delay_ms(100);
+
                     }
                 }
                 UART_putString((uint8_t *)data_buffer);

@@ -31,7 +31,7 @@ int main(int argc, const char** argv) {
     Data data = {0};
     data.channels = 4;
     data.frequency = 12345;   
-    data.mode = 2;    
+    data.mode = 1;    
 
 
 
