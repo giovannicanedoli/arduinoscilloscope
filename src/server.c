@@ -106,7 +106,7 @@ int main(void){
                     UART_putString((uint8_t *)data_buffer); 
                     UART_putString((uint8_t *)"\n");
                     memset(data_buffer, 0, sizeof(data_buffer));
-                    // _delay_ms(2000);
+                    _delay_ms(2000);
                     
                 }
                 

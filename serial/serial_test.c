@@ -7,7 +7,7 @@
 
 #define READ 1
 #define WRITE 0
-
+#define NFILES 8
 #define BUF_SIZE 1024
 
 typedef struct Data{
@@ -48,53 +48,34 @@ int main(int argc, const char** argv) {
 
 
     //open several datafiles (usare array per risparmiare righe di codice!)
-    FILE* file1 = fopen("datafile1", "w");
-    FILE* file2 = fopen("datafile2", "w");
-    FILE* file3 = fopen("datafile3", "w");
-    FILE* file4 = fopen("datafile4", "w");
-    FILE* file5 = fopen("datafile5", "w");
-    FILE* file6 = fopen("datafile6", "w");
-    FILE* file7 = fopen("datafile7", "w");
-    FILE* file8 = fopen("datafile8", "w");
 
-    if (file1 == NULL) {
-        perror("Error while trying to open first datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file2 == NULL) {
-        perror("Error while trying to open second datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file3 == NULL) {
-        perror("Error while trying to open third datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file4 == NULL) {
-        perror("Error while trying to open fourth datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file5 == NULL) {
-        perror("Error while trying to open fifth datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file6 == NULL) {
-        perror("Error while trying to open sixth datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file7 == NULL) {
-        perror("Error while trying to open seventh datafile");
-        exit(EXIT_FAILURE);
-    }
-    if (file8 == NULL) {
-        perror("Error while trying to open eighth datafile");
-        exit(EXIT_FAILURE);
+    char filenames[NFILES][20];
+    for (int i = 0; i < NFILES; i++){
+        sprintf(filenames[i], "datafile%d", i);
     }
 
+    FILE* files[NFILES];
+    for(int i = 0; i < NFILES; i++){
+        files[i] = fopen(filenames[i], "w");
+        if(files[i] == NULL){
+            perror("Error while trying to open datafile");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // for (int i = 0; i < NFILES; i++) {
+        // fclose(files[i]);  somewhere
+    // }
 
     int serial_fd=serial_open(serial_device);
 
     serial_set_interface_attribs(serial_fd, 19200, 0);
     serial_set_blocking(serial_fd, 1);
+
+    int file_num;
+    int matches = 0;
+
+    char adc_value[5];
 
     printf("in place\n");
     while(1) {
@@ -102,14 +83,18 @@ int main(int argc, const char** argv) {
         if (initilized) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
-            printf("%s", buf);
+            usleep(10000);
             
-            if(data.mode == 1){
-                //to avoid writing "RICEVUTO on files"
-                if(strncmp(buf, "RICEVUTO!",9)!= 0){
-                    fputs(buf, file1);
-                    fflush(file1);
-                }
+            
+            if(data.mode == 1 && strncmp(buf, "RICEVUTO!",9)!= 0){
+                
+                // printf("%d\n",strlen(buf));
+                matches = sscanf(buf, "%d %s\n", &file_num, adc_value);
+                if(matches < 2)continue;    //something happened to data
+                strcat(adc_value, "\n");
+                printf("file_num: %d adc value: %s",file_num,  adc_value);
+                fputs(adc_value, files[file_num]);
+                fflush(files[file_num]);
             }
 
             usleep(1000000);
