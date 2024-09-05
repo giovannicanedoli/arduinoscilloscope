@@ -84,7 +84,7 @@ int main(void){
             volatile_memcpy(&rcv_data, rcv_buffer, sizeof(Rcv_Struct));
             data_rcved = 1;
             UART_putString((uint8_t*)"RICEVUTO!\n");
-
+            _delay_ms(1000);
 
         }else{
             // UART_putString((uint8_t*)rcv_data.frequency);
@@ -99,14 +99,14 @@ int main(void){
             if(rcv_data.mode == 1){
 
                 // Convert the value to a string and send it via serial
-                uint8_t* data_buffer[10];
+                uint8_t data_buffer[200];
 
                 for(uint8_t i = 0; i < rcv_data.channels; i++){
                     snprintf((char*)data_buffer, sizeof(data_buffer), "%d %d", i, adc_value[i]);
                     UART_putString((uint8_t *)data_buffer); 
                     UART_putString((uint8_t *)"\n");
                     memset(data_buffer, 0, sizeof(data_buffer));
-                    _delay_ms(2000);
+                    _delay_ms(500);
                     
                 }
                 

@@ -31,7 +31,7 @@ int main(int argc, const char** argv) {
     Data data = {0};
     data.channels = 4;
     data.frequency = 12345;   
-    data.mode = 1;    
+    data.mode = 2;    
 
 
 
@@ -76,6 +76,8 @@ int main(int argc, const char** argv) {
     int matches = 0;
 
     char adc_value[5];
+    int volts;
+    char* line;
 
     printf("in place\n");
     while(1) {
@@ -83,18 +85,33 @@ int main(int argc, const char** argv) {
         if (initilized) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
-            usleep(10000);
+            printf("%s", buf); //debug
             
             
             if(data.mode == 1 && strncmp(buf, "RICEVUTO!",9)!= 0){
-                
-                // printf("%d\n",strlen(buf));
-                matches = sscanf(buf, "%d %s\n", &file_num, adc_value);
+                //successivamente voglio scriverli su un file (senza il RICEVUTO)
+                matches = sscanf(buf, "%d %d\n", &file_num, &volts);
                 if(matches < 2)continue;    //something happened to data
-                strcat(adc_value, "\n");
-                printf("file_num: %d adc value: %s",file_num,  adc_value);
+                volts = ((volts + 1) * 5) / 1024;   //conversion in volts
+                sprintf(adc_value, "%d\n", volts);
                 fputs(adc_value, files[file_num]);
                 fflush(files[file_num]);
+            }else{
+                
+                line = strtok(buf, "\n");
+                while(line != NULL){
+                    matches = sscanf(line, "%d %d", &file_num, &volts);
+                    if(matches < 2)break;
+                    volts = ((volts + 1) * 5) / 1024;   //conversion in volts
+                    // printf("%d, %d\n", file_num, volts);
+                    sprintf(adc_value, "%d\n", volts);
+                    fputs(adc_value, files[file_num]);
+                    fflush(files[file_num]);
+                    
+                    // Next line
+                    line = strtok(NULL, "\n");
+                }
+
             }
 
             usleep(1000000);

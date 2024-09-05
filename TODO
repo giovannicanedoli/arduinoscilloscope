@@ -18,3 +18,5 @@
 [ ] aggiungere i controlli su plot.sh (se i file non esistono/plot.sh viene avviato prima del campionamento)
 [ ] aggiungere un clock per evitare il potenziometro
 [ ] script che, a seconda del canale, mi scrive sul determinato file
+[ ] modi per ridurre il rumore, giocare col campionamento
+[ ] pulire il buffer in modalità buffered per avanzare con i dati?
