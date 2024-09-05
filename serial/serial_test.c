@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "mygnuplot.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -31,24 +32,8 @@ int main(int argc, const char** argv) {
     Data data = {0};
     data.channels = 4;
     data.frequency = 12345;   
-    data.mode = 2;    
-
-
-
-    // printf("Enter baudrate: \n")
-    // int baudrate = fgets(buf, BUF_SIZE, stdin);
-    //memset(buf, 0, BUF_SIZE);
+    data.mode = 1;    
     
-    
-    // printf("Enter number of channels (1-8)");
-    // channels = fgetc(stdin); (CONTROLLI SUL NUMERO! se non è valido richiedilo!)
-
-    // printf("Enter the frequency ");
-    // 
-
-
-    //open several datafiles (usare array per risparmiare righe di codice!)
-
     char filenames[NFILES][20];
     for (int i = 0; i < NFILES; i++){
         sprintf(filenames[i], "datafile%d", i);
@@ -78,6 +63,7 @@ int main(int argc, const char** argv) {
     char adc_value[5];
     int volts;
     char* line;
+    int executed = 0;
 
     printf("in place\n");
     while(1) {
@@ -94,8 +80,15 @@ int main(int argc, const char** argv) {
                 if(matches < 2)continue;    //something happened to data
                 volts = ((volts + 1) * 5) / 1024;   //conversion in volts
                 sprintf(adc_value, "%d\n", volts);
+                if(file_num >= 8 || file_num <= 0) continue; //another check
                 fputs(adc_value, files[file_num]);
                 fflush(files[file_num]);
+                //waits 0.5 s then opens file
+                // if(!executed){
+                //     // open_gnuplot(data.channels);
+                //     system("./plot.sh");
+                //     executed = 1;
+                // }
             }else{
                 
                 line = strtok(buf, "\n");
@@ -105,6 +98,7 @@ int main(int argc, const char** argv) {
                     volts = ((volts + 1) * 5) / 1024;   //conversion in volts
                     // printf("%d, %d\n", file_num, volts);
                     sprintf(adc_value, "%d\n", volts);
+                    if(file_num >= 0 || file_num <= 8) break;; //another check
                     fputs(adc_value, files[file_num]);
                     fflush(files[file_num]);
                     
