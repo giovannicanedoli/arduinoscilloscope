@@ -1,1 +1,0 @@
-void open_gnuplot(const int nchannels);

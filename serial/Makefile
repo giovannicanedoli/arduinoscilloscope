@@ -7,7 +7,7 @@ BINS=serial
 
 all: $(BINS)
 
-serial:   serial.c serial_test.c mygnuplot.c
+serial:   serial.c serial_test.c
 		$(CC) -o $@ $^  
 
 clean:

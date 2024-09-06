@@ -99,12 +99,11 @@ int main(void){
             if(rcv_data.mode == 1){
 
                 // Convert the value to a string and send it via serial
-                uint8_t data_buffer[200];
+                uint8_t data_buffer[50] = {0};
 
                 for(uint8_t i = 0; i < rcv_data.channels; i++){
-                    snprintf((char*)data_buffer, sizeof(data_buffer), "%d %d", i, adc_value[i]);
-                    UART_putString((uint8_t *)data_buffer); 
-                    UART_putString((uint8_t *)"\n");
+                    snprintf((char*)data_buffer, sizeof(data_buffer), "%u %u\n", i, adc_value[i]);
+                    UART_putString(data_buffer); 
                     memset(data_buffer, 0, sizeof(data_buffer));
                     _delay_ms(500);
                     
@@ -117,7 +116,7 @@ int main(void){
                 //buffered mode, I make 5 reads from all the channels
                 if(!sent){    
                     while (!trigger);   //busy waiting 
-                    UART_putString((uint8_t*) "Started sampling in buffered mode!\n");
+                    UART_putString((uint8_t*)"Started sampling in buffered mode!\n");
                     _delay_ms(500);
                     sent = 1;
                 }
@@ -130,10 +129,10 @@ int main(void){
                 int current_data_written;
                 for(uint8_t i = 0; i < 6 ; i++){
                     for(uint8_t j = 0; j < rcv_data.channels; j++){
-                        current_data_written = snprintf((char*)data_buffer + written, remaining, "%d %d\n", j, adc_value[j]);
+                        current_data_written = snprintf((char*)data_buffer + written, remaining, "%u %u\n", j, adc_value[j]);
                         written += current_data_written;
                         remaining -= current_data_written;
-                        _delay_ms(100);
+                        _delay_ms(1000);
 
                     }
                 }

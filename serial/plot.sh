@@ -1,43 +1,25 @@
 #! /bin/bash
 
-sleep 5
+sleep 5 #to make sure I've something to analize
 
-(
-  echo "plot [0:100] [0:6] '< tail -n100 datafile0' with lines";
-  while :; do sleep .4; echo replot; done
-) | gnuplot -persist &
+if [ -z "$1" ]; then
+    echo "Usage: $0 <#files>"
+    echo "BEWARE: you have to start ./serial in order to start plot.sh"
+    exit 1
+fi
 
-(
-  echo "plot [0:100] [0:6] '< tail -n100 datafile1' with lines";
-  while :; do sleep .4; echo replot; done
-) | gnuplot -persist &
+max_range=$1
+max_range=$((max_range-1))
+open_gnuplot() {
+  (
+    echo "plot [0:100] [0:6] '< tail -n100 datafile$1' title 'Datafile$1' with lines";
+    while :; do 
+      sleep .4; 
+      echo replot; 
+    done
+  ) | gnuplot -persist
+}
 
-(
-  echo "plot [0:100] [0:6] '< tail -n100 datafile2' with lines";
-  while :; do sleep .4; echo replot; done
-) | gnuplot -persist &
-
-(
-  echo "plot [0:100] [0:6] '< tail -n100 datafile3' with lines";
-  while :; do sleep .4; echo replot; done
-) | gnuplot -persist &
-
-(
-  echo "plot [0:100] [0:6] '< tail -n100 datafile4' with lines";
-  while :; do sleep .4; echo replot; done
-) | gnuplot -persist &
-
-# (
-#   echo "plot [0:100] [0:6] '< tail -n100 datafile5' with lines";
-#   while :; do sleep .4; echo replot; done
-# ) | gnuplot -persist 
-
-# (
-#   echo "plot [0:100] [0:6] '< tail -n100 datafile6' with lines";
-#   while :; do sleep .4; echo replot; done
-# ) | gnuplot -persist
-
-# (
-#   echo "plot [0:100] [0:6] '< tail -n100 datafile7' with lines";
-#   while :; do sleep .4; echo replot; done
-# ) | gnuplot -persist
+for i in $(seq 0 $max_range); do
+    open_gnuplot $i  &
+done

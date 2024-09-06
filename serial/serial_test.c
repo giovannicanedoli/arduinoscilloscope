@@ -1,10 +1,10 @@
 #include "serial.h"
-#include "mygnuplot.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <signal.h>
 
 #define READ 1
 #define WRITE 0
@@ -17,15 +17,20 @@ typedef struct Data{
     uint8_t mode;
 }__attribute__((packed)) Data;
 
+FILE* files[NFILES];
+int serial_fd;
+
 
 void serial_send(const Data* data, int serial_fd);
+
+void sigintHandler(int sig_num);
 
 int main(int argc, const char** argv) { 
     const char* serial_device="/dev/ttyACM0";
     int initilized = WRITE;
 
     int nchars;
-    char buf[BUF_SIZE];
+    uint8_t buf[BUF_SIZE];
     int channels;
 
 
@@ -39,7 +44,7 @@ int main(int argc, const char** argv) {
         sprintf(filenames[i], "datafile%d", i);
     }
 
-    FILE* files[NFILES];
+    files[NFILES];
     for(int i = 0; i < NFILES; i++){
         files[i] = fopen(filenames[i], "w");
         if(files[i] == NULL){
@@ -48,22 +53,19 @@ int main(int argc, const char** argv) {
         }
     }
 
-    // for (int i = 0; i < NFILES; i++) {
-        // fclose(files[i]);  somewhere
-    // }
-
-    int serial_fd=serial_open(serial_device);
+    serial_fd=serial_open(serial_device);
 
     serial_set_interface_attribs(serial_fd, 19200, 0);
     serial_set_blocking(serial_fd, 1);
 
-    int file_num;
-    int matches = 0;
+    //handling SIGINT
+    signal(SIGINT, sigintHandler); 
 
-    char adc_value[5];
-    int volts;
+    int file_num;
+    int matches = 0, counter = 0;
+    char adc_value[10];
+    float volts;
     char* line;
-    int executed = 0;
 
     printf("in place\n");
     while(1) {
@@ -71,37 +73,50 @@ int main(int argc, const char** argv) {
         if (initilized) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
-            printf("%s", buf); //debug
-            
+            // printf("%s\n", buf); //debug
+            usleep(10000);
             
             if(data.mode == 1 && strncmp(buf, "RICEVUTO!",9)!= 0){
-                //successivamente voglio scriverli su un file (senza il RICEVUTO)
-                matches = sscanf(buf, "%d %d\n", &file_num, &volts);
-                if(matches < 2)continue;    //something happened to data
-                volts = ((volts + 1) * 5) / 1024;   //conversion in volts
-                sprintf(adc_value, "%d\n", volts);
-                if(file_num >= 8 || file_num <= 0) continue; //another check
-                fputs(adc_value, files[file_num]);
-                fflush(files[file_num]);
-                //waits 0.5 s then opens file
-                // if(!executed){
-                //     // open_gnuplot(data.channels);
-                //     system("./plot.sh");
-                //     executed = 1;
-                // }
+
+                line = strtok(buf, "\n");
+                //Donno why is sent buffered even though I send one line at a time
+                while(line != NULL){
+                    printf("%s\n", line);
+                    matches = sscanf(line, "%d %f", &file_num, &volts);
+                    if(matches < 2)break;
+                    volts = ((volts + 1) * 5) / 1024;   //conversion in volts
+                    // printf("%d, %f\n", file_num, volts); DEBUG
+                    sprintf(adc_value, "%f\n", volts);
+                    if(file_num < 0 || file_num >= 8) break; //another check
+                    fputs(adc_value, files[file_num]);
+                    fflush(files[file_num]);
+
+                    if(counter == data.channels){
+                        sprintf(buf, "./plot.sh %d", data.channels);
+                        system(buf);
+                    }
+                    counter++;
+                    line = strtok(NULL, "\n");
+                }
+                
             }else{
                 
                 line = strtok(buf, "\n");
                 while(line != NULL){
-                    matches = sscanf(line, "%d %d", &file_num, &volts);
+                    printf("%s\n", line);
+                    matches = sscanf(line, "%d %f", &file_num, &volts);
                     if(matches < 2)break;
                     volts = ((volts + 1) * 5) / 1024;   //conversion in volts
-                    // printf("%d, %d\n", file_num, volts);
-                    sprintf(adc_value, "%d\n", volts);
-                    if(file_num >= 0 || file_num <= 8) break;; //another check
+                    // printf("%d, %d\n", file_num, volts); DEBUG
+                    sprintf(adc_value, "%f\n", volts);
+                    if(file_num < 0 || file_num >= 8) break; //another check
                     fputs(adc_value, files[file_num]);
                     fflush(files[file_num]);
-                    
+                    if(counter == data.channels){
+                        sprintf(buf, "./plot.sh %d", data.channels);
+                        system(buf);
+                    }
+                    counter++;
                     // Next line
                     line = strtok(NULL, "\n");
                 }
@@ -118,6 +133,7 @@ int main(int argc, const char** argv) {
             usleep(4000);
         }
     }
+    return 0;
 }
 
 void serial_send(const Data* data, int serial_fd){
@@ -131,3 +147,32 @@ void serial_send(const Data* data, int serial_fd){
     return;
 
 }
+
+/* Signal Handler for SIGINT */
+void sigintHandler(int sig_num){
+    /* Reset handler to catch SIGINT next time. 
+    Refer http://en.cppreference.com/w/c/program/signal */
+    signal(SIGINT, sigintHandler); 
+    int ret;
+    printf("SIGINT captured.\nClosing communication with arduino... ");
+    ret = close(serial_fd);
+    if(ret == -1){
+        perror("ERROR WHILE TRYING TO CLOSE SERIAL FD");
+        exit(EXIT_FAILURE);
+    }
+    printf("DONE\n");
+    printf("Closing all the files... ");
+    for (int i = 0; i < NFILES; i++) {
+        if(ret = fclose(files[i]) == EOF){
+            perror("ERROR WHILE TRYING TO CLOSE FILES");
+            exit(EXIT_FAILURE);
+        }
+    }
+    printf("DONE\n");
+    printf("Killing gnuplot processes... ");
+    system("pkill gnuplot");
+    fflush(stdout); 
+    printf("DONE\n");
+    printf("Exiting, have a nice day :)\n");
+    exit(0);
+} 
