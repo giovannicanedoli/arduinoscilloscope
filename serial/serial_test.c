@@ -29,9 +29,10 @@ int main(int argc, const char** argv) {
     int channels;
     Data data = {0};
     data.channels;
-    data.frequency = 12345;   
+    data.frequency;   
     data.mode;   
     char serial_device[30]="/dev/ttyACM0";
+    int freq;
 
 
     if (argc == 2 && strcmp(argv[1], "--help") == 0) {
@@ -39,10 +40,11 @@ int main(int argc, const char** argv) {
         return 0;
     }
 
-    if (argc >= 3) {
+    if (argc >= 4) {
         data.channels = atoi(argv[1]);
         data.mode = atoi(argv[2]);
-        
+        freq = atoi(argv[3]);
+        data.frequency = freq;
 
         if (data.channels < 1 || data.channels > 8) {
             printf("Not a valid value for channels. Must be in the range 1-8\n");
@@ -53,8 +55,24 @@ int main(int argc, const char** argv) {
             return 1;
         }
 
+        if (data.frequency <= 0) {
+            printf("Not a valid value for frequency. Must be a positive integer.\n");
+            return 1;
+        }
+
+        if(data.frequency > 0 && data.frequency <= 500){
+            printf("BEWARE: having a value below 500 ms could cause trubles\nConfirm? [y/N] ");
+            int c = getchar();    
+            if (c == 'y' || c == 'Y') {
+                
+            } else {
+                return 1;
+            }
+        }
+        
+
         //if given, specify serial_device
-        if (argc == 4) {
+        if (argc == 5) {
             strncpy(serial_device, argv[3], sizeof(serial_device) - 1);
             serial_device[sizeof(serial_device) - 1] = '\0';
         }
@@ -82,8 +100,27 @@ int main(int argc, const char** argv) {
             }
         } while(data.mode < 1 || data.mode > 2);
 
+        do {
+            printf("Enter frequency (ms) (positive integer): ");
+            //change! use freq
+            scanf("%hd", &data.frequency);
+            if (data.frequency <= 0) {
+                printf("Not a valid answer, must be a positive integer.\n");
+            }
+            if(data.frequency > 0 && data.frequency <= 500){
+                printf("BEWARE: having a value below 500 ms could cause trubles\nConfirm? [y/N] ");
+                int c = getchar();    
+                if (c == 'y' || c == 'Y') {
+                    break;
+                } else {
+                    return 1;
+                }
+            }
+        } while (data.frequency <= 0);
+
+
         //device_path
-        printf("Enter the path for your serial devise (default: /dev/ttyACM0): ");
+        printf("Enter the path for your serial device (default: /dev/ttyACM0): ");
         scanf("%s", serial_device);
         if (strlen(serial_device) == 0) {
             strncpy(serial_device, "/dev/ttyACM0", sizeof(serial_device) - 1);
@@ -231,9 +268,10 @@ void sigintHandler(int sig_num){
     exit(0);
 } 
 void print_help() {
-    printf("Usage: program [channels] [mode] [device_path]\n");
+    printf("Usage: program [channels] [mode] [frequency] [device_path]\n");
     printf("    channels: a number between 1 and 8\n");
     printf("    mode: a number between 1 and 2\n");
+    printf("    frequency: a non negative number\n");
     printf("    device_path: device path (optional, default: /dev/ttyACM0)\n");
     printf("If no arguments are provided, interactive input will be requested.\n");
     printf("Options:\n");

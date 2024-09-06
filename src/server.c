@@ -40,7 +40,7 @@ void adc_init(void) {
 void setup_timer1() {
     TCCR1A = 0;
     TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
-    OCR1A = 15624*2;  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second
+    OCR1A = 15.62 * rcv_data.frequency;  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second
     TIMSK1 = (1 << OCIE1A);  // Enable Timer1 compare match interrupt
 }
 
