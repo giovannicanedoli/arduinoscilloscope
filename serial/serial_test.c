@@ -17,27 +17,82 @@ typedef struct Data{
     uint8_t mode;
 }__attribute__((packed)) Data;
 
-FILE* files[NFILES];
+FILE* files[NFILES]; 
 int serial_fd;
 
 
 void serial_send(const Data* data, int serial_fd);
-
+void print_help();
 void sigintHandler(int sig_num);
 
 int main(int argc, const char** argv) { 
-    const char* serial_device="/dev/ttyACM0";
-    int initilized = WRITE;
-
-    int nchars;
-    uint8_t buf[BUF_SIZE];
     int channels;
-
-
     Data data = {0};
-    data.channels = 4;
+    data.channels;
     data.frequency = 12345;   
-    data.mode = 1;    
+    data.mode;   
+    char serial_device[30]="/dev/ttyACM0";
+
+
+    if (argc == 2 && strcmp(argv[1], "--help") == 0) {
+        print_help();
+        return 0;
+    }
+
+    if (argc >= 3) {
+        data.channels = atoi(argv[1]);
+        data.mode = atoi(argv[2]);
+        
+
+        if (data.channels < 1 || data.channels > 8) {
+            printf("Not a valid value for channels. Must be in the range 1-8\n");
+            return 1;
+        }
+        if (data.mode < 1 || data.mode > 2) {
+            printf("Not a valid value for mode. Must be either 1 or 2\n");
+            return 1;
+        }
+
+        //if given, specify serial_device
+        if (argc == 4) {
+            strncpy(serial_device, argv[3], sizeof(serial_device) - 1);
+            serial_device[sizeof(serial_device) - 1] = '\0';
+        }
+    }else if(argc > 1){
+        printf("Error: unregular number of parameters\n");
+        print_help();
+        return 1;
+    }else{
+
+        //data.channels
+        do {
+            printf("Enter number of channels (1-8): ");
+            scanf("%hhd", &data.channels);
+            if(data.channels < 1 || data.channels > 8) {
+                printf("Not a valid answer, number must be between (1-8)\n");
+            }
+        } while(data.channels < 1 || data.channels > 8);
+
+        //data.mode
+        do {
+            printf("Enter mode (1-2): ");
+            scanf("%hhd", &data.mode);
+            if(data.mode < 1 || data.mode > 2) {
+                printf("Not a valid answer, number must be between either 1 or 2\n");
+            }
+        } while(data.mode < 1 || data.mode > 2);
+
+        //device_path
+        printf("Enter the path for your serial devise (default: /dev/ttyACM0): ");
+        scanf("%s", serial_device);
+        if (strlen(serial_device) == 0) {
+            strncpy(serial_device, "/dev/ttyACM0", sizeof(serial_device) - 1);
+        }
+    }
+  
+    //handling SIGINT
+    signal(SIGINT, sigintHandler); 
+
     
     char filenames[NFILES][20];
     for (int i = 0; i < NFILES; i++){
@@ -58,9 +113,9 @@ int main(int argc, const char** argv) {
     serial_set_interface_attribs(serial_fd, 19200, 0);
     serial_set_blocking(serial_fd, 1);
 
-    //handling SIGINT
-    signal(SIGINT, sigintHandler); 
-
+    int initilized = WRITE;
+    uint8_t buf[BUF_SIZE];
+    int nchars;
     int file_num;
     int matches = 0, counter = 0;
     char adc_value[10];
@@ -147,7 +202,6 @@ void serial_send(const Data* data, int serial_fd){
     return;
 
 }
-
 /* Signal Handler for SIGINT */
 void sigintHandler(int sig_num){
     /* Reset handler to catch SIGINT next time. 
@@ -176,3 +230,12 @@ void sigintHandler(int sig_num){
     printf("Exiting, have a nice day :)\n");
     exit(0);
 } 
+void print_help() {
+    printf("Usage: program [channels] [mode] [device_path]\n");
+    printf("    channels: a number between 1 and 8\n");
+    printf("    mode: a number between 1 and 2\n");
+    printf("    device_path: device path (optional, default: /dev/ttyACM0)\n");
+    printf("If no arguments are provided, interactive input will be requested.\n");
+    printf("Options:\n");
+    printf("    --help       Show this help message and exit\n");
+}

@@ -6,12 +6,12 @@
 [x] once convertion is completed I have to enable an ISR which send data through serial (VIA INTERRUPT!)
 [x] once data arrived I need to plot them!
 [x] understanding how to adc from all channels
-[ ] fix makefiles
+[x] fix makefiles
 [x] fix headers
 [ ] testing!
 [ ] .sh files to automatize all?
 [x] serial .c?
-[ ] add sigaction to handle ctrl c
+[x] add sigaction to handle ctrl c
 [ ] add io control
 [ ] aggiungere una richiesta su quante iterazioni campionare nel buffered mode (esempio: numero > 5)
 [ ] aggiungere un campionamento della frequenza
