@@ -5,6 +5,7 @@
 #include "../avr_common/uart.h"
 
 #define MAX_CHANNELS 8
+#define ITERATIONS 10
 
 typedef struct{
     uint8_t channels;
@@ -40,7 +41,7 @@ void adc_init(void) {
 void setup_timer1() {
     TCCR1A = 0;
     TCCR1B = (1 << WGM12) | (1 << CS12) | (1 << CS10);
-    OCR1A = 15.62 * rcv_data.frequency;  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second
+    OCR1A = (uint16_t)(15.62 * rcv_data.frequency);  // (16MHz / 1024) * 1s - 1 = 15624 for 1 second => ~15,62 * 10000 = 1 sampling per second
     TIMSK1 = (1 << OCIE1A);  // Enable Timer1 compare match interrupt
 }
 
@@ -121,8 +122,7 @@ int main(void){
                     sent = 1;
                 }
                 
-                //TODO mettere il numero di iterazioni a scelta!
-                uint8_t* data_buffer[1000]; //crepi l'avarizia!    
+                uint8_t* data_buffer[1000];
                 int buff_size = sizeof(data_buffer);
                 int written = 0;
                 int remaining = buff_size;
@@ -132,8 +132,6 @@ int main(void){
                         current_data_written = snprintf((char*)data_buffer + written, remaining, "%u %u\n", j, adc_value[j]);
                         written += current_data_written;
                         remaining -= current_data_written;
-                        _delay_ms(1000);
-
                     }
                 }
                 UART_putString((uint8_t *)data_buffer);

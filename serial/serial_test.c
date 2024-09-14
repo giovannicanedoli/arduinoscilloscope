@@ -11,6 +11,7 @@
 #define NFILES 8
 #define BUF_SIZE 1024
 
+//Struct used to send data
 typedef struct Data{
     uint8_t channels;
     uint16_t frequency;
@@ -62,6 +63,8 @@ int main(int argc, const char** argv) {
 
         if(data.frequency > 0 && data.frequency <= 500){
             printf("BEWARE: having a value below 500 ms could cause trubles\nConfirm? [y/N] ");
+            fflush(stdout);
+
             int c = getchar();    
             if (c == 'y' || c == 'Y') {
                 
@@ -73,7 +76,7 @@ int main(int argc, const char** argv) {
 
         //if given, specify serial_device
         if (argc == 5) {
-            strncpy(serial_device, argv[3], sizeof(serial_device) - 1);
+            strncpy(serial_device, argv[4], sizeof(serial_device) - 1);
             serial_device[sizeof(serial_device) - 1] = '\0';
         }
     }else if(argc > 1){
@@ -100,6 +103,7 @@ int main(int argc, const char** argv) {
             }
         } while(data.mode < 1 || data.mode > 2);
 
+        //frequency
         do {
             printf("Enter frequency (ms) (positive integer): ");
             //change! use freq
@@ -108,7 +112,10 @@ int main(int argc, const char** argv) {
                 printf("Not a valid answer, must be a positive integer.\n");
             }
             if(data.frequency > 0 && data.frequency <= 500){
-                printf("BEWARE: having a value below 500 ms could cause trubles\nConfirm? [y/N] ");
+                printf("BEWARE: having a value below 500 ms could cause trubles, confirm? [y/N]: ");
+                fflush(stdout);
+
+                while (getchar() != '\n'); // discard leftover newline character
                 int c = getchar();    
                 if (c == 'y' || c == 'Y') {
                     break;
@@ -130,12 +137,13 @@ int main(int argc, const char** argv) {
     //handling SIGINT
     signal(SIGINT, sigintHandler); 
 
-    
+    //setup filenames array
     char filenames[NFILES][20];
     for (int i = 0; i < NFILES; i++){
         sprintf(filenames[i], "datafile%d", i);
     }
 
+    //setup files array
     files[NFILES];
     for(int i = 0; i < NFILES; i++){
         files[i] = fopen(filenames[i], "w");
@@ -150,7 +158,7 @@ int main(int argc, const char** argv) {
     serial_set_interface_attribs(serial_fd, 19200, 0);
     serial_set_blocking(serial_fd, 1);
 
-    int initilized = WRITE;
+    int mode = WRITE;
     uint8_t buf[BUF_SIZE];
     int nchars;
     int file_num;
@@ -159,35 +167,33 @@ int main(int argc, const char** argv) {
     float volts;
     char* line;
 
-    printf("in place\n");
+    printf("Ready!\n");
     while(1) {
-    memset(buf, 0, BUF_SIZE);
-        if (initilized) {
+    memset(buf, 0, BUF_SIZE);   //clearing buffer used to receive data
+        if (mode == READ) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
-            // printf("%s\n", buf); //debug
             usleep(10000);
             
-            if(data.mode == 1 && strncmp(buf, "RICEVUTO!",9)!= 0){
+            if(data.mode == 1){
 
                 line = strtok(buf, "\n");
-                //Donno why is sent buffered even though I send one line at a time
+                
                 while(line != NULL){
                     printf("%s\n", line);
-                    matches = sscanf(line, "%d %f", &file_num, &volts);
-                    if(matches < 2)break;
+                    matches = sscanf(line, "%d %f", &file_num, &volts); //extracting data
+                    if(matches < 2)break;   //first check
                     volts = ((volts + 1) * 5) / 1024;   //conversion in volts
-                    // printf("%d, %f\n", file_num, volts); DEBUG
                     sprintf(adc_value, "%f\n", volts);
                     if(file_num < 0 || file_num >= 8) break; //another check
-                    fputs(adc_value, files[file_num]);
-                    fflush(files[file_num]);
+                    fputs(adc_value, files[file_num]);  //writing on file[index]
+                    fflush(files[file_num]);    //ensuring data is written
 
+                    //I start plot.sh only if at least data.channels samples are arrived
                     if(counter == data.channels){
                         sprintf(buf, "./plot.sh %d", data.channels);
-                        system(buf);
+                        system(buf);    //start plot.sh with data.channels as a parameter
                     }
-                    counter++;
                     line = strtok(NULL, "\n");
                 }
                 
@@ -197,55 +203,53 @@ int main(int argc, const char** argv) {
                 while(line != NULL){
                     printf("%s\n", line);
                     matches = sscanf(line, "%d %f", &file_num, &volts);
-                    if(matches < 2)break;
+                    if(matches < 2)break; //first check
                     volts = ((volts + 1) * 5) / 1024;   //conversion in volts
-                    // printf("%d, %d\n", file_num, volts); DEBUG
                     sprintf(adc_value, "%f\n", volts);
                     if(file_num < 0 || file_num >= 8) break; //another check
-                    fputs(adc_value, files[file_num]);
-                    fflush(files[file_num]);
+                    fputs(adc_value, files[file_num]); //writing on file[index]
+                    fflush(files[file_num]); //ensuring data is written
+
+                    //I start plot.sh only if at least data.channels samples are arrived
                     if(counter == data.channels){
                         sprintf(buf, "./plot.sh %d", data.channels);
-                        system(buf);
+                        system(buf);    //start plot.sh with data.channels as a parameter
                     }
-                    counter++;
-                    // Next line
                     line = strtok(NULL, "\n");
                 }
 
             }
-
-            usleep(1000000);
+            counter++;
+            usleep(1000000); //waiting 1s
         } else {
-            usleep(1000000);
+            usleep(1000000); //waiting 1s
             serial_send(&data, serial_fd);
-            initilized = READ;
+            mode = READ;
             printf("Data sent...\n");
             printf("I'm listening...\n");
-            usleep(4000);
+            usleep(5000);   //waiting 0.5s
         }
     }
     return 0;
 }
 
+/* Sending data over serial */
 void serial_send(const Data* data, int serial_fd){
     uint8_t send_buffer[sizeof(Data)];
-
+    //serialize data
     memcpy(send_buffer, data, sizeof(Data));
-
+    //using write syscall to send data with serial_fd
     ssize_t count = write(serial_fd, send_buffer,sizeof(Data));
-    
-
     return;
 
 }
+
 /* Signal Handler for SIGINT */
 void sigintHandler(int sig_num){
-    /* Reset handler to catch SIGINT next time. 
-    Refer http://en.cppreference.com/w/c/program/signal */
     signal(SIGINT, sigintHandler); 
     int ret;
     printf("SIGINT captured.\nClosing communication with arduino... ");
+    fflush(stdout); 
     ret = close(serial_fd);
     if(ret == -1){
         perror("ERROR WHILE TRYING TO CLOSE SERIAL FD");
@@ -253,6 +257,7 @@ void sigintHandler(int sig_num){
     }
     printf("DONE\n");
     printf("Closing all the files... ");
+    fflush(stdout); 
     for (int i = 0; i < NFILES; i++) {
         if(ret = fclose(files[i]) == EOF){
             perror("ERROR WHILE TRYING TO CLOSE FILES");
@@ -261,12 +266,15 @@ void sigintHandler(int sig_num){
     }
     printf("DONE\n");
     printf("Killing gnuplot processes... ");
+    fflush(stdout); 
     system("pkill gnuplot");
     fflush(stdout); 
     printf("DONE\n");
     printf("Exiting, have a nice day :)\n");
     exit(0);
 } 
+
+/* --help */ 
 void print_help() {
     printf("Usage: program [channels] [mode] [frequency] [device_path]\n");
     printf("    channels: a number between 1 and 8\n");
