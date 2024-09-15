@@ -27,7 +27,6 @@ void print_help();
 void sigintHandler(int sig_num);
 
 int main(int argc, const char** argv) { 
-    int channels;
     Data data = {0};
     data.channels;
     data.frequency;   
@@ -43,26 +42,33 @@ int main(int argc, const char** argv) {
 
     if (argc >= 4) {
         data.channels = atoi(argv[1]);
-        data.mode = atoi(argv[2]);
-        freq = atoi(argv[3]);
-        data.frequency = freq;
 
         if (data.channels < 1 || data.channels > 8) {
             printf("Not a valid value for channels. Must be in the range 1-8\n");
             return 1;
         }
+
+        data.mode = atoi(argv[2]);
+
         if (data.mode < 1 || data.mode > 2) {
             printf("Not a valid value for mode. Must be either 1 or 2\n");
+            print_help();
             return 1;
         }
 
-        if (data.frequency <= 0) {
+        freq = atoi(argv[3]);
+
+        if (freq <= 0) {
             printf("Not a valid value for frequency. Must be a positive integer.\n");
+            print_help();
             return 1;
         }
 
-        if(data.frequency > 0 && data.frequency <= 500){
-            printf("BEWARE: having a value below 500 ms could cause trubles\nConfirm? [y/N] ");
+        data.frequency = freq;
+
+        if(data.frequency > 1000){
+            printf("BEWARE: having a value above 1000 could cause trubles\nConfirm? [y/N] ");
+            print_help();
             fflush(stdout);
 
             int c = getchar();    
@@ -72,7 +78,6 @@ int main(int argc, const char** argv) {
                 return 1;
             }
         }
-        
 
         //if given, specify serial_device
         if (argc == 5) {
@@ -107,14 +112,15 @@ int main(int argc, const char** argv) {
         do {
             printf("Enter frequency (ms) (positive integer): ");
             //change! use freq
-            scanf("%hd", &data.frequency);
-            if (data.frequency <= 0) {
+            scanf("%d", &freq);
+            // printf("%hd\n", data.frequency);
+            if (freq <= 0) {
                 printf("Not a valid answer, must be a positive integer.\n");
             }
-            if(data.frequency > 0 && data.frequency <= 500){
-                printf("BEWARE: having a value below 500 ms could cause trubles, confirm? [y/N]: ");
-                fflush(stdout);
 
+            if(freq > 1000){
+                printf("BEWARE: having a value above 1000 could cause trubles\nConfirm? [y/N] ");
+                fflush(stdout);
                 while (getchar() != '\n'); // discard leftover newline character
                 int c = getchar();    
                 if (c == 'y' || c == 'Y') {
@@ -123,8 +129,10 @@ int main(int argc, const char** argv) {
                     return 1;
                 }
             }
-        } while (data.frequency <= 0);
 
+        } while (freq <= 0);
+
+        data.frequency = (uint16_t)freq;
 
         //device_path
         printf("Enter the path for your serial device (default: /dev/ttyACM0): ");
@@ -174,7 +182,7 @@ int main(int argc, const char** argv) {
             
             nchars=read(serial_fd, buf,BUF_SIZE);
             usleep(10000);
-            
+
             if(data.mode == 1){
 
                 line = strtok(buf, "\n");
@@ -227,6 +235,9 @@ int main(int argc, const char** argv) {
             mode = READ;
             printf("Data sent...\n");
             printf("I'm listening...\n");
+            if(data.mode == 2){
+                printf("Remember that arduino is waiting for an interrupt!\n");
+            }
             usleep(5000);   //waiting 0.5s
         }
     }
@@ -259,7 +270,7 @@ void sigintHandler(int sig_num){
     printf("Closing all the files... ");
     fflush(stdout); 
     for (int i = 0; i < NFILES; i++) {
-        if(ret = fclose(files[i]) == EOF){
+        if((ret = fclose(files[i])) == EOF){
             perror("ERROR WHILE TRYING TO CLOSE FILES");
             exit(EXIT_FAILURE);
         }

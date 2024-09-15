@@ -84,19 +84,15 @@ int main(void){
             
             volatile_memcpy(&rcv_data, rcv_buffer, sizeof(Rcv_Struct));
             data_rcved = 1;
-            UART_putString((uint8_t*)"RICEVUTO!\n");
+            UART_putString((uint8_t*)"[ARDUINO] RICEVUTO!\n");
             _delay_ms(1000);
 
         }else{
-            // UART_putString((uint8_t*)rcv_data.frequency);
-            // UART_putChar(rcv_data.channels);
-
-            //continuous sampling !CHANNELS MUST BE SET!
-            
             adc_init();
             setup_timer1();
             sei();
 
+            //continuous sampling
             if(rcv_data.mode == 1){
 
                 // Convert the value to a string and send it via serial
@@ -114,7 +110,7 @@ int main(void){
 
             }else{
                 
-                //buffered mode, I make 5 reads from all the channels
+                //buffered mode, I make 10 reads from all the channels
                 if(!sent){    
                     while (!trigger);   //busy waiting 
                     UART_putString((uint8_t*)"Started sampling in buffered mode!\n");
@@ -127,7 +123,7 @@ int main(void){
                 int written = 0;
                 int remaining = buff_size;
                 int current_data_written;
-                for(uint8_t i = 0; i < 6 ; i++){
+                for(uint8_t i = 0; i < ITERATIONS ; i++){
                     for(uint8_t j = 0; j < rcv_data.channels; j++){
                         current_data_written = snprintf((char*)data_buffer + written, remaining, "%u %u\n", j, adc_value[j]);
                         written += current_data_written;

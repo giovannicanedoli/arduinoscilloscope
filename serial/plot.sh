@@ -1,6 +1,6 @@
 #! /bin/bash
 
-sleep 5 #to make sure I've something to analize
+sleep 5 #to be sure I've something to analize
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <#files>"
