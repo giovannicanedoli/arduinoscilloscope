@@ -110,7 +110,7 @@ int main(int argc, const char** argv) {
 
         //frequency
         do {
-            printf("Enter frequency (ms) (positive integer): ");
+            printf("Enter frequency (positive integer): ");
             //change! use freq
             scanf("%d", &freq);
             // printf("%hd\n", data.frequency);
@@ -170,11 +170,11 @@ int main(int argc, const char** argv) {
     uint8_t buf[BUF_SIZE];
     int nchars;
     int file_num;
-    int matches = 0, counter = 0;
+    int matches = 0, counter = -1;  //counter is -1 since the first string is [ARDUINO] RICEVUTO 
     char adc_value[10];
     float volts;
     char* line;
-
+    printf("%u\n", data.channels);
     printf("Ready!\n");
     while(1) {
     memset(buf, 0, BUF_SIZE);   //clearing buffer used to receive data
@@ -183,11 +183,16 @@ int main(int argc, const char** argv) {
             nchars=read(serial_fd, buf,BUF_SIZE);
             usleep(10000);
 
-            if(data.mode == 1){
+            //I start plot.sh only if at least data.channels samples are arrived
+            if(counter == data.channels){
+                        sprintf(buf, "./plot.sh %d", data.channels);
+                        system(buf);    //start plot.sh with data.channels as a parameter
+            }
 
-                line = strtok(buf, "\n");
-                
-                while(line != NULL){
+            //Extracting data from buf
+            line = strtok(buf, "\n");
+
+            while(line != NULL){
                     printf("%s\n", line);
                     matches = sscanf(line, "%d %f", &file_num, &volts); //extracting data
                     if(matches < 2)break;   //first check
@@ -196,37 +201,9 @@ int main(int argc, const char** argv) {
                     if(file_num < 0 || file_num >= 8) break; //another check
                     fputs(adc_value, files[file_num]);  //writing on file[index]
                     fflush(files[file_num]);    //ensuring data is written
-
-                    //I start plot.sh only if at least data.channels samples are arrived
-                    if(counter == data.channels){
-                        sprintf(buf, "./plot.sh %d", data.channels);
-                        system(buf);    //start plot.sh with data.channels as a parameter
-                    }
-                    line = strtok(NULL, "\n");
-                }
-                
-            }else{
-                
-                line = strtok(buf, "\n");
-                while(line != NULL){
-                    printf("%s\n", line);
-                    matches = sscanf(line, "%d %f", &file_num, &volts);
-                    if(matches < 2)break; //first check
-                    volts = ((volts + 1) * 5) / 1024;   //conversion in volts
-                    sprintf(adc_value, "%f\n", volts);
-                    if(file_num < 0 || file_num >= 8) break; //another check
-                    fputs(adc_value, files[file_num]); //writing on file[index]
-                    fflush(files[file_num]); //ensuring data is written
-
-                    //I start plot.sh only if at least data.channels samples are arrived
-                    if(counter == data.channels){
-                        sprintf(buf, "./plot.sh %d", data.channels);
-                        system(buf);    //start plot.sh with data.channels as a parameter
-                    }
                     line = strtok(NULL, "\n");
                 }
 
-            }
             counter++;
             usleep(1000000); //waiting 1s
         } else {

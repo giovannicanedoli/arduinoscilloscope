@@ -8,15 +8,13 @@
 [x] understanding how to adc from all channels
 [x] fix makefiles
 [x] fix headers
-[ ] testing!
-[ ] .sh files to automatize all?
+[x] testing!
+[x] .sh files to automatize all?
 [x] serial .c?
 [x] add sigaction to handle ctrl c
-[ ] add io control
-[ ] aggiungere una richiesta su quante iterazioni campionare nel buffered mode (esempio: numero > 5)
-[ ] aggiungere un campionamento della frequenza
-[ ] aggiungere i controlli su plot.sh (se i file non esistono/plot.sh viene avviato prima del campionamento)
-[ ] aggiungere un clock per evitare il potenziometro
-[ ] script che, a seconda del canale, mi scrive sul determinato file
-[ ] modi per ridurre il rumore, giocare col campionamento
-[ ] pulire il buffer in modalità buffered per avanzare con i dati?
+[x] add io control
+[x] aggiungere una richiesta su quante iterazioni campionare nel buffered mode (esempio: numero > 5)
+[x] aggiungere un campionamento della frequenza
+[x] aggiungere i controlli su plot.sh (se i file non esistono/plot.sh viene avviato prima del campionamento)
+[x] script che, a seconda del canale, mi scrive sul determinato file
+[x] pulire il buffer in modalità buffered per avanzare con i dati?
