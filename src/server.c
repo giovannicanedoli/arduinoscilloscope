@@ -45,6 +45,13 @@ void setup_timer1() {
     TIMSK1 = (1 << OCIE1A);  // Enable Timer1 compare match interrupt
 }
 
+void setup_interrupt21(){
+    DDRD = 0x0;
+    PORTD = 0x1;
+    // enable interrupt 0
+    EIMSK |=1<<INT0;
+}
+
 ISR(TIMER1_COMPA_vect) {
     select_adc_channel(current_channel);  // Select the current channel
     ADCSRA |= (1 << ADSC);  // Start a new conversion
@@ -70,10 +77,6 @@ int main(void){
     cli();
     uint8_t rcv_buffer[sizeof(Rcv_Struct)];
     int data_rcved = 0;
-    DDRD = 0x0;
-    PORTD = 0x1;
-    // enable interrupt 0
-    EIMSK |=1<<INT0;
     while (1) {
         
         if(!data_rcved){
@@ -90,6 +93,7 @@ int main(void){
         }else{
             adc_init();
             setup_timer1();
+            setup_interrupt21();
             sei();
 
             //continuous sampling
