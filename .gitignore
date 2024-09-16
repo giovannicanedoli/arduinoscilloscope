@@ -3,3 +3,4 @@
 *.hex
 .vscode
 datafile*
+serial

@@ -101,7 +101,7 @@ int main(int argc, const char** argv) {
 
         //data.mode
         do {
-            printf("Enter mode (1-2): ");
+            printf("Enter mode, a number between 1 and 2 (1 = continuous, 2 = buffered): ");
             scanf("%hhd", &data.mode);
             if(data.mode < 1 || data.mode > 2) {
                 printf("Not a valid answer, number must be between either 1 or 2\n");
@@ -110,10 +110,8 @@ int main(int argc, const char** argv) {
 
         //frequency
         do {
-            printf("Enter frequency (positive integer): ");
-            //change! use freq
+            printf("Enter frequency, positive integer representing timer interrupt time: ");
             scanf("%d", &freq);
-            // printf("%hd\n", data.frequency);
             if (freq <= 0) {
                 printf("Not a valid answer, must be a positive integer.\n");
             }
@@ -266,8 +264,8 @@ void sigintHandler(int sig_num){
 void print_help() {
     printf("Usage: program [channels] [mode] [frequency] [device_path]\n");
     printf("    channels: a number between 1 and 8\n");
-    printf("    mode: a number between 1 and 2\n");
-    printf("    frequency: a non negative number\n");
+    printf("    mode: a number between 1 and 2 (1 = continuous, 2 = buffered)\n");
+    printf("    frequency: a non negative number representing timer interrupt time\n");
     printf("    device_path: device path (optional, default: /dev/ttyACM0)\n");
     printf("If no arguments are provided, interactive input will be requested.\n");
     printf("Options:\n");
