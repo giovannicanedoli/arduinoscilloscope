@@ -83,6 +83,7 @@ void print_help() {
     printf("Options:\n");
     printf("    --help       Show this help message and exit\n");
 }
+```
 
 
 
