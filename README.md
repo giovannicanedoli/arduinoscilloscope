@@ -84,9 +84,3 @@ void print_help() {
     printf("    --help       Show this help message and exit\n");
 }
 ```
-
-
-
-Project for os class.
-Professor Giorgio Grisetti
-Year 2023-24
